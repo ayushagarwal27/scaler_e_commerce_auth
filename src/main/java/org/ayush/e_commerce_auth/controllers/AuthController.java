@@ -30,7 +30,8 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<UserDto> signUp(@RequestBody SignUpRequestDto signUpRequestDto) throws UserAlreadyExistsException {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUp(signUpRequestDto.getEmail(), signUpRequestDto.getPassword()));
+        UserDto user = authService.signUp(signUpRequestDto.getEmail(), signUpRequestDto.getPassword());
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
 
