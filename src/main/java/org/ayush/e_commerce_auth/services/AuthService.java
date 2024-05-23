@@ -1,12 +1,14 @@
 package org.ayush.e_commerce_auth.services;
 
 import org.ayush.e_commerce_auth.dtos.AuthRequestValidateDto;
-import org.ayush.e_commerce_auth.dtos.LoginRequestDto;
+import org.ayush.e_commerce_auth.dtos.LoginResponseDto;
 import org.ayush.e_commerce_auth.dtos.UserDto;
+import org.ayush.e_commerce_auth.exceptions.PasswordIncorrectException;
 import org.ayush.e_commerce_auth.exceptions.UserAlreadyExistsException;
+import org.ayush.e_commerce_auth.exceptions.UserDoesNotExitsException;
 
 public interface AuthService {
-    String login(LoginRequestDto authRequestLoginDTO);
+    LoginResponseDto login(String email, String password) throws UserDoesNotExitsException, PasswordIncorrectException;
 
     UserDto signUp(String email, String password) throws UserAlreadyExistsException;
 

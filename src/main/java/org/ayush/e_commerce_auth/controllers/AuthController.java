@@ -1,11 +1,11 @@
 package org.ayush.e_commerce_auth.controllers;
 
-import org.ayush.e_commerce_auth.dtos.AuthRequestValidateDto;
-import org.ayush.e_commerce_auth.dtos.LoginRequestDto;
-import org.ayush.e_commerce_auth.dtos.SignUpRequestDto;
-import org.ayush.e_commerce_auth.dtos.UserDto;
+import org.ayush.e_commerce_auth.dtos.*;
+import org.ayush.e_commerce_auth.exceptions.PasswordIncorrectException;
 import org.ayush.e_commerce_auth.exceptions.UserAlreadyExistsException;
+import org.ayush.e_commerce_auth.exceptions.UserDoesNotExitsException;
 import org.ayush.e_commerce_auth.services.AuthService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,8 +24,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequestDto loginRequestDto) {
-        return authService.login(loginRequestDto);
+    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto) throws UserDoesNotExitsException, PasswordIncorrectException {
+        LoginResponseDto responseDto = authService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("AUTH_TOKEN", responseDto.getToken());
+        return ResponseEntity.accepted().headers(httpHeaders).body(responseDto.getUserDto());
     }
 
     @PostMapping("/signup")
