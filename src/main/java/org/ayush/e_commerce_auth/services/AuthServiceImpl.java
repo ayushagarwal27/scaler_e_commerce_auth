@@ -1,7 +1,6 @@
 package org.ayush.e_commerce_auth.services;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.ayush.e_commerce_auth.dtos.AuthRequestValidateDto;
 import org.ayush.e_commerce_auth.dtos.LoginResponseDto;
 import org.ayush.e_commerce_auth.dtos.UserDto;
 import org.ayush.e_commerce_auth.exceptions.PasswordIncorrectException;
@@ -10,7 +9,6 @@ import org.ayush.e_commerce_auth.exceptions.UserDoesNotExitsException;
 import org.ayush.e_commerce_auth.models.Session;
 import org.ayush.e_commerce_auth.models.SessionStatus;
 import org.ayush.e_commerce_auth.models.User;
-import org.ayush.e_commerce_auth.repositories.SessionRepo;
 import org.ayush.e_commerce_auth.repositories.SessionRepository;
 import org.ayush.e_commerce_auth.repositories.UserRepo;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,15 +19,13 @@ import java.util.Optional;
 @Service
 public class AuthServiceImpl implements AuthService {
     private final UserRepo userRepo;
-    private final SessionRepository sessionRepository;
     private final PasswordEncoder passwordEncoder;
-    private final SessionRepo sessionRepo;
+    private final SessionRepository sessionRepository;
 
-    public AuthServiceImpl(UserRepo userRepo, SessionRepository sessionRepository, PasswordEncoder passwordEncoder, SessionRepo sessionRepo) {
+    public AuthServiceImpl(UserRepo userRepo, SessionRepository sessionRepository, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.sessionRepository = sessionRepository;
         this.passwordEncoder = passwordEncoder;
-        this.sessionRepo = sessionRepo;
     }
 
 
@@ -52,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
         session.setUser(user);
         session.setToken(token);
         session.setSessionStatus(SessionStatus.ACTIVE);
-        sessionRepo.save(session);
+        sessionRepository.save(session);
 
 //        Login response
         LoginResponseDto responseDto = new LoginResponseDto();
@@ -64,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserDto signUp(String email, String password) throws UserAlreadyExistsException {
         Optional<User> userExists = userRepo.findByEmail(email);
-        if (!userExists.isEmpty()) {
+        if (userExists.isPresent()) {
             throw new UserAlreadyExistsException("User with email: " + email + " already exists");
         }
 
@@ -77,7 +73,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String validate(AuthRequestValidateDto authRequestValidateDto) {
-        return "Success!";
+    public SessionStatus validate(Long userId, String token) {
+        Session session = sessionRepository.findByTokenAndUser_Id(token, userId);
+        if (session == null) {
+            return SessionStatus.INVALID;
+        }
+
+        if (!session.getSessionStatus().equals(SessionStatus.ACTIVE)) {
+            return SessionStatus.EXPIRED;
+        }
+
+        return SessionStatus.ACTIVE;
     }
 }

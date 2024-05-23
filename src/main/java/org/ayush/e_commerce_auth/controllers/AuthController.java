@@ -4,6 +4,7 @@ import org.ayush.e_commerce_auth.dtos.*;
 import org.ayush.e_commerce_auth.exceptions.PasswordIncorrectException;
 import org.ayush.e_commerce_auth.exceptions.UserAlreadyExistsException;
 import org.ayush.e_commerce_auth.exceptions.UserDoesNotExitsException;
+import org.ayush.e_commerce_auth.models.SessionStatus;
 import org.ayush.e_commerce_auth.services.AuthService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,13 +24,6 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto) throws UserDoesNotExitsException, PasswordIncorrectException {
-        LoginResponseDto responseDto = authService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("AUTH_TOKEN", responseDto.getToken());
-        return ResponseEntity.accepted().headers(httpHeaders).body(responseDto.getUserDto());
-    }
 
     @PostMapping("/signup")
     public ResponseEntity<UserDto> signUp(@RequestBody SignUpRequestDto signUpRequestDto) throws UserAlreadyExistsException {
@@ -38,8 +32,18 @@ public class AuthController {
     }
 
 
+    @PostMapping("/login")
+    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto loginRequestDto) throws UserDoesNotExitsException, PasswordIncorrectException {
+        LoginResponseDto responseDto = authService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("AUTH_TOKEN", responseDto.getToken());
+        return ResponseEntity.accepted().headers(httpHeaders).body(responseDto.getUserDto());
+    }
+
+
     @PostMapping("/validate")
-    public String validate(@RequestBody AuthRequestValidateDto authRequestValidateDto) {
-        return authService.validate(authRequestValidateDto);
+    public SessionStatus validate(@RequestBody AuthRequestValidateDto authRequestValidateDto) {
+        SessionStatus sessionStatus = authService.validate(authRequestValidateDto.getUserId(), authRequestValidateDto.getToken());
+        return sessionStatus;
     }
 }
