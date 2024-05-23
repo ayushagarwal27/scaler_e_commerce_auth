@@ -13,4 +13,6 @@ public interface AuthService {
     UserDto signUp(String email, String password) throws UserAlreadyExistsException;
 
     SessionStatus validate(Long userId, String token);
+
+    void logout(Long userId, String token);
 }

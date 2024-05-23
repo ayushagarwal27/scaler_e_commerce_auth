@@ -85,4 +85,16 @@ public class AuthServiceImpl implements AuthService {
 
         return SessionStatus.ACTIVE;
     }
+
+    @Override
+    public void logout(Long userId, String token) {
+        Session session = sessionRepository.findByTokenAndUser_Id(token, userId);
+
+        if (session == null) {
+            return;
+        }
+
+        session.setSessionStatus(SessionStatus.EXPIRED);
+        sessionRepository.save(session);
+    }
 }

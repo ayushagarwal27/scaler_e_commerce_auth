@@ -42,8 +42,13 @@ public class AuthController {
 
 
     @PostMapping("/validate")
-    public SessionStatus validate(@RequestBody AuthRequestValidateDto authRequestValidateDto) {
-        SessionStatus sessionStatus = authService.validate(authRequestValidateDto.getUserId(), authRequestValidateDto.getToken());
-        return sessionStatus;
+    public ResponseEntity<SessionStatus> validate(@RequestBody AuthRequestValidateDto authRequestValidateDto) {
+        return ResponseEntity.accepted().body(authService.validate(authRequestValidateDto.getUserId(), authRequestValidateDto.getToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody LogoutRequestDto logoutRequestDto) {
+        authService.logout(logoutRequestDto.getUserId(), logoutRequestDto.getToken());
+        return ResponseEntity.ok().build();
     }
 }
