@@ -1,6 +1,7 @@
 package org.ayush.e_commerce_auth.controllers;
 
 import org.ayush.e_commerce_auth.dtos.*;
+import org.ayush.e_commerce_auth.exceptions.IncorrectTokenException;
 import org.ayush.e_commerce_auth.exceptions.PasswordIncorrectException;
 import org.ayush.e_commerce_auth.exceptions.UserAlreadyExistsException;
 import org.ayush.e_commerce_auth.exceptions.UserDoesNotExitsException;
@@ -42,13 +43,13 @@ public class AuthController {
 
 
     @PostMapping("/validate")
-    public ResponseEntity<SessionStatus> validate(@RequestBody AuthRequestValidateDto authRequestValidateDto) {
-        return ResponseEntity.accepted().body(authService.validate(authRequestValidateDto.getUserId(), authRequestValidateDto.getToken()));
+    public ResponseEntity<SessionStatus> validate(@RequestBody AuthRequestValidateDto authRequestValidateDto) throws IncorrectTokenException {
+        return ResponseEntity.accepted().body(authService.validate(authRequestValidateDto.getToken()));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestBody LogoutRequestDto logoutRequestDto) {
-        authService.logout(logoutRequestDto.getUserId(), logoutRequestDto.getToken());
+    public ResponseEntity<Void> logout(@RequestBody LogoutRequestDto logoutRequestDto) throws IncorrectTokenException {
+        authService.logout(logoutRequestDto.getToken());
         return ResponseEntity.ok().build();
     }
 }

@@ -1,6 +1,7 @@
 package org.ayush.e_commerce_auth.advices;
 
 import org.ayush.e_commerce_auth.dtos.ErrorResponseDto;
+import org.ayush.e_commerce_auth.exceptions.IncorrectTokenException;
 import org.ayush.e_commerce_auth.exceptions.PasswordIncorrectException;
 import org.ayush.e_commerce_auth.exceptions.UserAlreadyExistsException;
 import org.ayush.e_commerce_auth.exceptions.UserDoesNotExitsException;
@@ -27,6 +28,13 @@ public class ExceptionAdvices {
 
     @ExceptionHandler(PasswordIncorrectException.class)
     public ResponseEntity<ErrorResponseDto> passwordIncorrect(Exception exception) {
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto();
+        errorResponseDto.setMessage(exception.getMessage());
+        return ResponseEntity.badRequest().body(errorResponseDto);
+    }
+
+    @ExceptionHandler(IncorrectTokenException.class)
+    public ResponseEntity<ErrorResponseDto> incorrectToken(Exception exception) {
         ErrorResponseDto errorResponseDto = new ErrorResponseDto();
         errorResponseDto.setMessage(exception.getMessage());
         return ResponseEntity.badRequest().body(errorResponseDto);

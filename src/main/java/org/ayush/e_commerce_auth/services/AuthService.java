@@ -2,6 +2,7 @@ package org.ayush.e_commerce_auth.services;
 
 import org.ayush.e_commerce_auth.dtos.LoginResponseDto;
 import org.ayush.e_commerce_auth.dtos.UserDto;
+import org.ayush.e_commerce_auth.exceptions.IncorrectTokenException;
 import org.ayush.e_commerce_auth.exceptions.PasswordIncorrectException;
 import org.ayush.e_commerce_auth.exceptions.UserAlreadyExistsException;
 import org.ayush.e_commerce_auth.exceptions.UserDoesNotExitsException;
@@ -12,7 +13,7 @@ public interface AuthService {
 
     UserDto signUp(String email, String password) throws UserAlreadyExistsException;
 
-    SessionStatus validate(Long userId, String token);
+    SessionStatus validate(String token) throws IncorrectTokenException;
 
-    void logout(Long userId, String token);
+    void logout(String token) throws IncorrectTokenException;
 }

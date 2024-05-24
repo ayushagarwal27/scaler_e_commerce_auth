@@ -1,8 +1,11 @@
 package org.ayush.e_commerce_auth.services;
 
-import org.apache.commons.lang3.RandomStringUtils;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import org.ayush.e_commerce_auth.dtos.LoginResponseDto;
 import org.ayush.e_commerce_auth.dtos.UserDto;
+import org.ayush.e_commerce_auth.exceptions.IncorrectTokenException;
 import org.ayush.e_commerce_auth.exceptions.PasswordIncorrectException;
 import org.ayush.e_commerce_auth.exceptions.UserAlreadyExistsException;
 import org.ayush.e_commerce_auth.exceptions.UserDoesNotExitsException;
@@ -14,6 +17,9 @@ import org.ayush.e_commerce_auth.repositories.UserRepo;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -21,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
     private final SessionRepository sessionRepository;
+    private final SecretKey key = Jwts.SIG.HS256.key().build();
 
     public AuthServiceImpl(UserRepo userRepo, SessionRepository sessionRepository, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
@@ -41,18 +48,24 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new PasswordIncorrectException("Email or password is incorrect");
         }
+//      Generate JWT token
+        Map<String, Object> payloadMap = new HashMap<>();
+        payloadMap.put("userID", user.getId());
+        payloadMap.put("email", user.getEmail());
+        payloadMap.put("roles", user.getRoles());
+        String jwtToken = Jwts.builder().claims(payloadMap).signWith(key).compact();
+
 
 //        Store session
-        String token = RandomStringUtils.randomAscii(20);
         Session session = new Session();
         session.setUser(user);
-        session.setToken(token);
+        session.setToken(jwtToken);
         session.setSessionStatus(SessionStatus.ACTIVE);
         sessionRepository.save(session);
 
 //        Login response
         LoginResponseDto responseDto = new LoginResponseDto();
-        responseDto.setToken(token);
+        responseDto.setToken(jwtToken);
         responseDto.setUserDto(UserDto.from(user));
         return responseDto;
     }
@@ -73,8 +86,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public SessionStatus validate(Long userId, String token) {
-        Session session = sessionRepository.findByTokenAndUser_Id(token, userId);
+    public SessionStatus validate(String token) throws IncorrectTokenException {
+//        Decode token
+        Claims claims;
+        try {
+            claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        } catch (JwtException e) {
+            throw new IncorrectTokenException("Token is not correct");
+        }
+        Long userID = ((Number) claims.get("userID")).longValue();
+
+//        Check session
+        Session session = sessionRepository.findByTokenAndUser_Id(token, userID);
         if (session == null) {
             return SessionStatus.INVALID;
         }
@@ -87,8 +110,19 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(Long userId, String token) {
-        Session session = sessionRepository.findByTokenAndUser_Id(token, userId);
+    public void logout(String token) throws IncorrectTokenException {
+//        Decode token
+        Claims claims;
+        try {
+            claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        } catch (JwtException e) {
+            throw new IncorrectTokenException("Token is not correct");
+        }
+
+        Long userID = ((Number) claims.get("userID")).longValue();
+
+//        Check session
+        Session session = sessionRepository.findByTokenAndUser_Id(token, userID);
 
         if (session == null) {
             return;
