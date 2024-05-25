@@ -43,8 +43,17 @@ public class AuthController {
 
 
     @PostMapping("/validate")
-    public ResponseEntity<SessionStatus> validate(@RequestBody AuthRequestValidateDto authRequestValidateDto) throws IncorrectTokenException {
-        return ResponseEntity.accepted().body(authService.validate(authRequestValidateDto.getToken()));
+    public ResponseEntity<ValidateResponseDto> validate(@RequestBody AuthRequestValidateDto authRequestValidateDto) throws IncorrectTokenException {
+        UserDto userDto = authService.validate(authRequestValidateDto.getToken());
+        ValidateResponseDto validateResponseDto = new ValidateResponseDto();
+
+        if (userDto == null) {
+            validateResponseDto.setSessionStatus(SessionStatus.INVALID);
+            return ResponseEntity.ok().body(validateResponseDto);
+        }
+        validateResponseDto.setUserDto(userDto);
+        validateResponseDto.setSessionStatus(SessionStatus.ACTIVE);
+        return ResponseEntity.ok().body(validateResponseDto);
     }
 
     @PostMapping("/logout")

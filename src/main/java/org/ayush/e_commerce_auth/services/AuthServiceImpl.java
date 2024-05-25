@@ -86,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public SessionStatus validate(String token) throws IncorrectTokenException {
+    public UserDto validate(String token) throws IncorrectTokenException {
 //        Decode token
         Claims claims;
         try {
@@ -99,14 +99,18 @@ public class AuthServiceImpl implements AuthService {
 //        Check session
         Session session = sessionRepository.findByTokenAndUser_Id(token, userID);
         if (session == null) {
-            return SessionStatus.INVALID;
+            return null;
         }
 
         if (!session.getSessionStatus().equals(SessionStatus.ACTIVE)) {
-            return SessionStatus.EXPIRED;
+            return null;
         }
 
-        return SessionStatus.ACTIVE;
+        Optional<User> user = userRepo.findById(userID);
+        if (user.isEmpty()) {
+            return null;
+        }
+        return UserDto.from(user.get());
     }
 
     @Override
